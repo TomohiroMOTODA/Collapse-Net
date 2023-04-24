@@ -1,0 +1,61 @@
+import os
+import glob
+import numpy as np
+from PIL import Image, ImageOps
+from timeit import default_timer as timer
+
+import tensorflow as tf
+from keras import backend
+from keras.models import model_from_json
+
+from utils.yolo import yolo_for_task
+from utils.options import options
+from utils.candidates import create_candidate, create_candidate_sample
+from utils.visualizer import map_visualizer, map_visualizer_sample
+
+def init_tensorflow():
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    sess = tf.Session(config=config)
+    backend.set_session(sess)
+
+def init_yolo_detector():
+    detector = yolo_for_task()
+    return detector
+
+# load the trained model
+def load_collapse_net(opt):
+    model = model_from_json(open(opt.model).read()) 
+    model.load_weights(opt.weight)
+    return model
+
+def generate_map_sample(net):
+    # load an image
+    img_depth_  = Image.open("./data/sample/test.jpg")
+    img_binary_ = Image.open("./data/sample/test_mask.jpg")
+
+    img_depth  = ImageOps.flip(img_depth_)
+    img_binary = ImageOps.flip(img_binary_)
+
+    img_depth = img_depth.resize((256, 256))
+    img_binary = img_binary.resize((256, 256))
+    img_depth = np.array(img_depth)
+    img_binary = np.array(img_binary)
+
+    # predict by the trained model
+    predict = net.predict([[img_depth], [img_binary]])
+
+    map_visualizer_sample(img_depth, img_binary, predict)
+
+if __name__=='__main__':
+    init_tensorflow() # initialize the cuDNN
+    opt = options() # command options 
+
+    # detector = init_yolo_detector()
+    net      = load_collapse_net(opt)
+
+    # --- sample
+    # ./data/sample/test.jpg
+    # ./data/sample/test_mask.jpg
+    # cand     = create_candidate_sample(detector)
+    generate_map_sample (net)
