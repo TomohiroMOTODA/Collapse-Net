@@ -3,6 +3,7 @@
 ### Usage:
 Extract the weight models as follows:<br>
 ```
+wget "https://drive.google.com/uc?export=download&id=19aqCNBdecRLP0eeiR5LoaAjCScgH98he" -o saved_models.tar.xz
 tar -xf saved_models.tar.xz
 ```
 
